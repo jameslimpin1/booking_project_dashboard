@@ -210,6 +210,8 @@
   /* Stage chart */
 
   /* Drilldown */
+  .dd-summary { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .dd-summary table.cohort-table { margin-top: 10px; }
   .drill-layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
   @media (max-width: 760px) { .drill-layout { grid-template-columns: 1fr; } }
   .drill-filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -393,6 +395,27 @@
         unanswered-opening case (86), the 50 highest cancellation-risk bookings, and
         80 typical conversations for contrast. Filters above also narrow this list.
       </p>
+      <div class="dd-summary">
+        <div class="filter-group" style="max-width:260px;">
+          <label for="dd-slice-select">Slice conversation counts by</label>
+          <select id="dd-slice-select">
+            <option value="booking_outcome">Booking outcome</option>
+            <option value="primary_intent">Primary intent</option>
+            <option value="channel">Channel</option>
+            <option value="loyalty_tier">Loyalty tier</option>
+            <option value="csat">CSAT</option>
+            <option value="messages">Messages</option>
+          </select>
+        </div>
+        <p class="desc" style="margin-top:6px;">
+          Counts of conversations in the curated set below, currently
+          <span id="dd-summary-count">216</span> shown after tag/global filters.
+        </p>
+        <table class="cohort-table" id="dd-summary-table">
+          <colgroup><col class="col-name"><col class="col-bar"><col class="col-num"><col class="col-num"></colgroup>
+          <tbody></tbody>
+        </table>
+      </div>
       <div class="drill-layout">
         <div>
           <div class="drill-filters" id="drill-tag-filters"></div>
@@ -447,6 +470,16 @@
   const ddMeta = rowsToObjs(DD.meta);
   const ddMsgs = rowsToObjs(DD.messages);
   const ddTags = DD.tags;
+
+  const msgCountByConv = {};
+  ddMsgs.forEach(function (m) { msgCountByConv[m.conversation_id] = (msgCountByConv[m.conversation_id] || 0) + 1; });
+  function messageBucket(n) {
+    if (n <= 1) return '1';
+    if (n <= 3) return '2–3';
+    if (n <= 6) return '4–6';
+    if (n <= 10) return '7–10';
+    return '11+';
+  }
 
   const INTENT_LABELS = {
     noise_complaint: 'Noise complaint', checkin_issue: 'Check-in issue', amenity_complaint: 'Amenity complaint',
@@ -851,6 +884,7 @@
     renderJourneyCard();
     renderImpactHeatmap();
     renderConvList();
+    renderDrillSummary();
   }
 
   monthSel.addEventListener('change', function () { filters.month = monthSel.value; selectedMonths.clear(); renderAll(); });
@@ -876,12 +910,14 @@
       if (activeTagFilters.has(tag)) { activeTagFilters.delete(tag); btn.classList.remove('active'); }
       else { activeTagFilters.add(tag); btn.classList.add('active'); }
       renderConvList();
+      renderDrillSummary();
     });
   });
 
-  function renderConvList() {
-    const listEl = document.getElementById('conv-list');
-    const filtered = ddMeta.filter(function (m) {
+  // Shared by the conversation list and the summary table below, so the two
+  // never drift out of sync with each other.
+  function ddFilteredMeta() {
+    return ddMeta.filter(function (m) {
       const tagsForConv = ddTags[String(m.conversation_id)] || ddTags[m.conversation_id] || [];
       const tagMatch = tagsForConv.some(function (t) { return activeTagFilters.has(t); });
       const chMatch = filters.channel === 'all' || m.channel === filters.channel;
@@ -889,6 +925,74 @@
       const monthMatch = filters.month === 'all' || m.month === filters.month;
       return tagMatch && chMatch && tierMatch && monthMatch;
     });
+  }
+
+  // --- Drill-down summary table: conversation counts sliced by one dimension at a time ---
+  const DD_DIMENSIONS = {
+    booking_outcome: {
+      label: 'Booking outcome',
+      value: function (m) { return m.booking_status; }
+    },
+    primary_intent: {
+      label: 'Primary intent',
+      value: function (m) { return INTENT_LABELS[m.primary_intent] || m.primary_intent; }
+    },
+    channel: {
+      label: 'Channel',
+      value: function (m) { return m.channel; }
+    },
+    loyalty_tier: {
+      label: 'Loyalty tier',
+      value: function (m) { return TIER_LABEL[m.loyalty_tier] || m.loyalty_tier; },
+      order: ['Platinum', 'Gold', 'Silver', 'No tier']
+    },
+    csat: {
+      label: 'CSAT',
+      value: function (m) { return m.csat_score == null ? '—' : (m.csat_score + ' / 5'); },
+      order: ['5 / 5', '4 / 5', '3 / 5', '2 / 5', '1 / 5', '—']
+    },
+    messages: {
+      label: 'Messages',
+      value: function (m) { return messageBucket(msgCountByConv[m.conversation_id] || 0); },
+      order: ['1', '2–3', '4–6', '7–10', '11+']
+    }
+  };
+  const sliceSelect = document.getElementById('dd-slice-select');
+
+  function renderDrillSummary() {
+    const filtered = ddFilteredMeta();
+    document.getElementById('dd-summary-count').textContent = filtered.length;
+
+    const dim = DD_DIMENSIONS[sliceSelect.value];
+    const el = document.getElementById('dd-summary-table').querySelector('tbody');
+    if (!filtered.length) { el.innerHTML = '<tr><td colspan="4" class="name">No conversations match these filters.</td></tr>'; return; }
+
+    const counts = {};
+    filtered.forEach(function (m) {
+      const v = dim.value(m);
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    const values = dim.order
+      ? dim.order.filter(function (v) { return counts[v]; })
+      : Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    const maxCount = Math.max.apply(null, values.map(function (v) { return counts[v]; }));
+
+    el.innerHTML = values.map(function (v) {
+      const c = counts[v];
+      const w = pct(c, maxCount);
+      return '<tr>' +
+        '<td class="name">' + v + '</td>' +
+        '<td><div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + w + '%; background:var(--series-1);"></div></div></td>' +
+        '<td class="num"><strong>' + c + '</strong></td>' +
+        '<td class="num">' + pct(c, filtered.length).toFixed(1) + '%</td>' +
+      '</tr>';
+    }).join('');
+  }
+  sliceSelect.addEventListener('change', renderDrillSummary);
+
+  function renderConvList() {
+    const listEl = document.getElementById('conv-list');
+    const filtered = ddFilteredMeta();
     if (!filtered.length) { listEl.innerHTML = '<div class="empty-note" style="padding:16px;">No conversations match these filters.</div>'; return; }
     listEl.innerHTML = filtered.map(function (m) {
       const tagsForConv = ddTags[String(m.conversation_id)] || ddTags[m.conversation_id] || [];

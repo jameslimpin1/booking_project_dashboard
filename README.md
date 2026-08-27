@@ -31,6 +31,9 @@ Published via GitHub Pages, rebuilt automatically whenever `main` changes:
   drill-down (event journey → full message transcript) for a curated set of
   216 conversations: every unanswered-opening case, the 50 highest
   cancellation-risk bookings, and 80 typical conversations for contrast.
+  A summary table above the conversation list shows counts for whatever's
+  currently filtered, sliceable by booking outcome, primary intent, channel,
+  loyalty tier, CSAT, or message count.
 
 ## Viewing locally
 
