@@ -1065,7 +1065,7 @@
   function renderConvList() {
     const listEl = document.getElementById('conv-list');
     const filtered = ddFilteredMeta();
-    if (!filtered.length) { listEl.innerHTML = '<div class="empty-note" style="padding:16px;">No conversations match these filters.</div>'; return; }
+    if (!filtered.length) { listEl.innerHTML = '<div class="empty-note" style="padding:16px;">No conversations match the selected tags.</div>'; return; }
     listEl.innerHTML = filtered.map(function (m) {
       const tagsForConv = ddTags[String(m.conversation_id)] || ddTags[m.conversation_id] || [];
       const sel = m.conversation_id === selectedConvId ? ' selected' : '';
