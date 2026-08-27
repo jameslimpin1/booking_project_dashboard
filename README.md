@@ -9,6 +9,13 @@ data pipeline. All chart and drill-down data is embedded directly in the
 HTML as static JSON and refreshed from the pipeline's warehouse by a script
 that lives in that repo (see [Data & refresh](#data--refresh) below).
 
+## Live
+
+Published via GitHub Pages, rebuilt automatically whenever `main` changes:
+
+- **Page 1 (Executive summary):** https://jameslimpin1.github.io/booking_project_dashboard/dashboard_prototype.html
+- **Page 2 (Explorer / drill-down):** https://jameslimpin1.github.io/booking_project_dashboard/dashboard_prototype_page2.html
+
 ## Pages
 
 - **`dashboard_prototype.html`** — executive summary. Headline stat (1 in 7
