@@ -31,9 +31,11 @@ change is never mistaken for "the dashboard didn't update."
   channel × loyalty-tier slicers over the same data, a "what happened"
   impact heatmap (event pattern × month), top complaint/everyday-question
   cohorts, the price-quintile revenue-risk chart, a **Conversation profile**
-  section (6 side-by-side breakdowns — booking outcome, primary intent,
-  channel, loyalty tier, CSAT, message count — over the full ~72K-conversation
-  population for a date range you control with a slider), and a
+  section (4 hero stats — total conversations, cancellation rate, avg CSAT,
+  avg messages per conversation — above a 2-column × 3-row grid of
+  breakdowns: booking outcome, primary intent, channel, loyalty tier, CSAT,
+  message count — all over the full ~72K-conversation population for a date
+  range you control with a slider), and a
   conversation-level drill-down (event journey → full message transcript)
   for a curated set of 216 conversations: every unanswered-opening case, the
   50 highest cancellation-risk bookings, and 80 typical conversations for
