@@ -27,8 +27,13 @@ change is never mistaken for "the dashboard didn't update."
   "unanswered opening message" finding (guests whose first message never
   gets a reply cancel at nearly 1 in 4 — the single clearest fixable driver
   in the data).
-- **`dashboard_prototype_page2.html`** — explorer / drill-down. Month ×
-  channel × loyalty-tier slicers over the same data, a "what happened"
+- **`dashboard_prototype_page2.html`** — explorer / drill-down. A month ×
+  channel × loyalty-tier filter scoped only to the top complaints/everyday-
+  questions card (with a "show all" toggle beyond the top 5) — every other
+  section below owns its own control (date sliders, heatmap month-clicks,
+  drill-down tag filters) rather than silently reacting to that filter, so
+  nothing on the page moves unless the control you touched actually governs
+  it. Also: a "what happened"
   impact heatmap (event pattern × month), top complaint/everyday-question
   cohorts, the price-quintile revenue-risk chart, a **Conversation profile**
   section (4 hero stats — total conversations, cancellation rate, avg CSAT,

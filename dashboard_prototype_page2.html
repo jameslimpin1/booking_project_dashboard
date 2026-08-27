@@ -80,8 +80,8 @@
   /* Filter row */
   .filters {
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
-    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; margin-bottom: 24px; position: sticky; top: 8px; z-index: 10;
+    background: var(--page); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; margin: 14px 0 8px;
   }
   .filter-group { display: flex; flex-direction: column; gap: 3px; }
   .filter-group label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); font-weight: 600; }
@@ -100,6 +100,7 @@
     padding: 24px; margin-bottom: 20px; box-sizing: border-box; overflow-x: auto;
   }
   .card h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .two-col h3 { font-size: 13px; font-weight: 700; margin: 0 0 8px; color: var(--text-primary); }
   .card .desc { color: var(--text-secondary); font-size: 13px; margin: 0 0 18px; line-height: 1.5; max-width: 640px; }
   .card .empty-note { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
 
@@ -213,7 +214,7 @@
   .profile-panels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 24px; margin-top: 18px; }
   @media (max-width: 640px) { .profile-panels { grid-template-columns: 1fr; } }
   .profile-panel h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--text-muted); margin: 0 0 10px; font-weight: 700; }
-  .profile-bar-row { display: grid; grid-template-columns: 96px 1fr 60px; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .profile-bar-row { display: grid; grid-template-columns: 1fr 52px 52px; align-items: center; gap: 8px; margin-bottom: 6px; }
   .profile-bar-label { font-size: 11.5px; color: var(--text-secondary); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .profile-bar-track { position: relative; height: 12px; background: var(--chip-bg); border-radius: 3px; overflow: hidden; }
   .profile-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px; background: var(--series-1); }
@@ -291,38 +292,46 @@
     <div class="pagenav"><a href="./">← Page 1: Executive summary</a> &nbsp;·&nbsp; <strong>Page 2: Explorer</strong></div>
     <h1>Explore the Data</h1>
     <p class="subtitle">
-      Slice by month, channel, and loyalty tier to answer: what are guests complaining
-      about, what are they asking, where in the conversation do we lose them, and — for
-      any specific case — what actually happened, message by message.
+      Slice complaints and everyday questions by month, channel, and loyalty
+      tier below. Sections further down the page (journey stage, impact
+      heatmap, conversation profile, drill-down) have their own independent
+      controls, not this filter — each is scoped to the data it shows.
     </p>
 
-    <div class="filters">
-      <div class="filter-group">
-        <label for="f-month">Month</label>
-        <select id="f-month"><option value="all">All 12 months</option></select>
+    <div class="card">
+      <h2>Top complaints &amp; everyday questions</h2>
+      <p class="desc">
+        Ranked by bookings affected. This filter only scopes this card —
+        nothing else on the page moves with it.
+      </p>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="f-month">Month</label>
+          <select id="f-month"><option value="all">All 12 months</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="f-channel">Channel</label>
+          <select id="f-channel"><option value="all">All channels</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="f-tier">Loyalty tier</label>
+          <select id="f-tier"><option value="all">All tiers</option></select>
+        </div>
+        <button class="filter-reset" id="f-reset">Reset filters</button>
       </div>
-      <div class="filter-group">
-        <label for="f-channel">Channel</label>
-        <select id="f-channel"><option value="all">All channels</option></select>
-      </div>
-      <div class="filter-group">
-        <label for="f-tier">Loyalty tier</label>
-        <select id="f-tier"><option value="all">All tiers</option></select>
-      </div>
-      <button class="filter-reset" id="f-reset">Reset filters</button>
-    </div>
-    <div class="filter-summary" id="filter-summary"></div>
+      <div class="filter-summary" id="filter-summary"></div>
 
-    <div class="two-col">
-      <div class="card">
-        <h2>Top 5 complaints</h2>
-        <p class="desc">Ranked by bookings affected, within the current filter.</p>
-        <div class="barchart" id="complaints-chart"></div>
-      </div>
-      <div class="card">
-        <h2>Top 5 everyday questions</h2>
-        <p class="desc">Routine, non-complaint conversation topics.</p>
-        <div class="barchart" id="questions-chart"></div>
+      <div class="two-col">
+        <div>
+          <h3>Complaints</h3>
+          <div class="barchart" id="complaints-chart"></div>
+          <button class="filter-reset" id="complaints-toggle-all" style="margin-top:12px;">Show all complaints</button>
+        </div>
+        <div>
+          <h3>Everyday questions</h3>
+          <div class="barchart" id="questions-chart"></div>
+          <button class="filter-reset" id="questions-toggle-all" style="margin-top:12px;">Show all everyday questions</button>
+        </div>
       </div>
     </div>
 
@@ -553,18 +562,35 @@
     return Object.values(byIntent);
   }
 
+  let showAllComplaints = false;
+  let showAllQuestions = false;
+
   function renderComplaintsAndQuestions() {
     const filtered = intentRows.filter(function (r) { return matches(r, filters); });
     const all = aggregateIntent(filtered);
-    const complaints = all.filter(function (d) { return d.cluster === 'complaint'; }).sort(function (a, b) { return b.bookings - a.bookings; }).slice(0, 5);
-    const questions = all.filter(function (d) { return d.cluster === 'everyday'; }).sort(function (a, b) { return b.bookings - a.bookings; }).slice(0, 5);
+    const complaintsAll = all.filter(function (d) { return d.cluster === 'complaint'; }).sort(function (a, b) { return b.bookings - a.bookings; });
+    const questionsAll = all.filter(function (d) { return d.cluster === 'everyday'; }).sort(function (a, b) { return b.bookings - a.bookings; });
 
-    renderRankedBars('complaints-chart', complaints, 'var(--status-critical)');
-    renderRankedBars('questions-chart', questions, 'var(--series-1)');
-    return complaints;
+    renderRankedBars('complaints-chart', showAllComplaints ? complaintsAll : complaintsAll.slice(0, 5), 'var(--status-critical)');
+    renderRankedBars('questions-chart', showAllQuestions ? questionsAll : questionsAll.slice(0, 5), 'var(--series-1)');
+
+    const complaintsBtn = document.getElementById('complaints-toggle-all');
+    complaintsBtn.textContent = showAllComplaints ? 'Show top 5' : 'Show all ' + complaintsAll.length + ' complaints';
+    complaintsBtn.disabled = complaintsAll.length <= 5;
+    const questionsBtn = document.getElementById('questions-toggle-all');
+    questionsBtn.textContent = showAllQuestions ? 'Show top 5' : 'Show all ' + questionsAll.length + ' everyday questions';
+    questionsBtn.disabled = questionsAll.length <= 5;
   }
+  document.getElementById('complaints-toggle-all').addEventListener('click', function () {
+    showAllComplaints = !showAllComplaints;
+    renderComplaintsAndQuestions();
+  });
+  document.getElementById('questions-toggle-all').addEventListener('click', function () {
+    showAllQuestions = !showAllQuestions;
+    renderComplaintsAndQuestions();
+  });
 
-  // --- Cohort card: independent date-range slider (channel/tier still shared with global filters) ---
+  // --- Cohort card: fully independent date-range slider ---
   const cohortFromInput = document.getElementById('cohort-date-from');
   const cohortToInput = document.getElementById('cohort-date-to');
   cohortFromInput.max = String(months.length - 1);
@@ -582,11 +608,10 @@
     fillEl.style.left = (fromIdx / lastIdx * 100) + '%';
     fillEl.style.width = ((toIdx - fromIdx) / lastIdx * 100) + '%';
 
+    // Own date slider only -- not wired to the complaints/questions filter above.
     const filtered = intentRows.filter(function (r) {
       const idx = months.indexOf(r.month);
-      return idx >= fromIdx && idx <= toIdx &&
-        (filters.channel === 'all' || r.channel === filters.channel) &&
-        (filters.tier === 'all' || r.loyalty_tier === filters.tier);
+      return idx >= fromIdx && idx <= toIdx;
     });
     const all = aggregateIntent(filtered);
     const complaints = all.filter(function (d) { return d.cluster === 'complaint'; }).sort(function (a, b) { return b.bookings - a.bookings; }).slice(0, 5);
@@ -818,14 +843,13 @@
     return o;
   });
 
-  // Clicking heatmap month headers slices the hero stats + stage table below,
-  // independent of (and taking priority over) the global month dropdown.
+  // Self-contained: shows the full population unless the user clicks heatmap
+  // month headers to select specific months. Intentionally NOT wired to the
+  // complaints/questions filter above -- that filter is scoped to that one
+  // card only, so nothing down here should silently move with it.
   let selectedMonths = new Set();
   function journeyMatches(r) {
-    const monthOk = selectedMonths.size ? selectedMonths.has(r.month) : (filters.month === 'all' || r.month === filters.month);
-    return monthOk &&
-      (filters.channel === 'all' || r.channel === filters.channel) &&
-      (filters.tier === 'all' || r.loyalty_tier === filters.tier);
+    return !selectedMonths.size || selectedMonths.has(r.month);
   }
 
   function updateMonthSelectUI() {
@@ -932,8 +956,9 @@
   });
 
   function renderImpactHeatmap() {
+    // Full population always -- not wired to the complaints/questions filter above.
     const el = document.getElementById('impact-heatmap');
-    const filtered = impactRows.filter(function (r) { return matches(r, filters); });
+    const filtered = impactRows;
     if (!filtered.length) { el.innerHTML = '<div class="empty-note">No data for this filter combination.</div>'; document.getElementById('rev-table').innerHTML = ''; return; }
 
     const cell = {}; // category -> month -> {bookings, cancelled, cancelledPrice}
@@ -986,6 +1011,10 @@
       '</table>';
   }
 
+  // Everything below only runs once at init. The complaints/questions filter
+  // (month/channel/tier + reset) only ever re-renders the complaints/questions
+  // card -- see renderComplaintsFilterChange -- nothing else on the page
+  // reacts to it, by design (each other section owns its own control).
   function renderAll() {
     updateFilterSummary();
     renderComplaintsAndQuestions();
@@ -995,15 +1024,17 @@
     renderConvList();
   }
 
-  monthSel.addEventListener('change', function () { filters.month = monthSel.value; selectedMonths.clear(); renderAll(); });
-  channelSel.addEventListener('change', function () { filters.channel = channelSel.value; renderAll(); });
-  tierSel.addEventListener('change', function () { filters.tier = tierSel.value; renderAll(); });
+  function renderComplaintsFilterChange() {
+    updateFilterSummary();
+    renderComplaintsAndQuestions();
+  }
+  monthSel.addEventListener('change', function () { filters.month = monthSel.value; renderComplaintsFilterChange(); });
+  channelSel.addEventListener('change', function () { filters.channel = channelSel.value; renderComplaintsFilterChange(); });
+  tierSel.addEventListener('change', function () { filters.tier = tierSel.value; renderComplaintsFilterChange(); });
   document.getElementById('f-reset').addEventListener('click', function () {
     filters = { month: 'all', channel: 'all', tier: 'all' };
     monthSel.value = 'all'; channelSel.value = 'all'; tierSel.value = 'all';
-    cohortFromInput.value = '0'; cohortToInput.value = String(months.length - 1);
-    selectedMonths.clear();
-    renderAll();
+    renderComplaintsFilterChange();
   });
 
   // --- Drilldown ---
@@ -1023,14 +1054,11 @@
 
   // Shared by the conversation list and the summary table below, so the two
   // never drift out of sync with each other.
+  // Own tag filters only -- not wired to the complaints/questions filter above.
   function ddFilteredMeta() {
     return ddMeta.filter(function (m) {
       const tagsForConv = ddTags[String(m.conversation_id)] || ddTags[m.conversation_id] || [];
-      const tagMatch = tagsForConv.some(function (t) { return activeTagFilters.has(t); });
-      const chMatch = filters.channel === 'all' || m.channel === filters.channel;
-      const tierMatch = filters.tier === 'all' || m.loyalty_tier === filters.tier;
-      const monthMatch = filters.month === 'all' || m.month === filters.month;
-      return tagMatch && chMatch && tierMatch && monthMatch;
+      return tagsForConv.some(function (t) { return activeTagFilters.has(t); });
     });
   }
 
