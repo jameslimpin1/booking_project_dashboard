@@ -11,14 +11,17 @@ that lives in that repo (see [Data & refresh](#data--refresh) below).
 
 ## Live
 
-Published via GitHub Pages, rebuilt automatically whenever `main` changes:
+**https://jameslimpin1.github.io/booking_project_dashboard/**
 
-- **Page 1 (Executive summary):** https://jameslimpin1.github.io/booking_project_dashboard/dashboard_prototype.html
-- **Page 2 (Explorer / drill-down):** https://jameslimpin1.github.io/booking_project_dashboard/dashboard_prototype_page2.html
+One link — that's `index.html` (the executive summary), which links to the
+explorer page from its own nav bar, which links back the same way.
+Published via GitHub Pages, rebuilt automatically whenever `main` changes.
+Bookmark the one URL above, not the individual page files, so a page-2-only
+change is never mistaken for "the dashboard didn't update."
 
 ## Pages
 
-- **`dashboard_prototype.html`** — executive summary. Headline stat (1 in 7
+- **`index.html`** — executive summary. Headline stat (1 in 7
   bookings cancel, 14.8% baseline), revenue lost to cancellation, where in
   the guest-conversation journey bookings are usually lost, and the
   "unanswered opening message" finding (guests whose first message never
@@ -40,18 +43,18 @@ Published via GitHub Pages, rebuilt automatically whenever `main` changes:
 
 ## Viewing locally
 
-No build step — open either file directly in a browser:
+No build step — open the file directly in a browser:
 
 ```bash
-open dashboard_prototype.html
+open index.html
 ```
 
-Or serve both pages together (needed for the page 1 → page 2 link to resolve
-via a local server instead of `file://`):
+Or serve both pages together (needed for the page 1 ↔ page 2 links to
+resolve via a local server instead of `file://`):
 
 ```bash
 python3 -m http.server 8000
-# then visit http://localhost:8000/dashboard_prototype.html
+# then visit http://localhost:8000/
 ```
 
 ## Data & refresh
@@ -85,7 +88,7 @@ diff and commit here separately once you're happy with the result:
 
 ```bash
 git status
-git add dashboard_prototype.html dashboard_prototype_page2.html
+git add index.html dashboard_prototype_page2.html
 git commit -m "Refresh dashboard data"
 git push
 ```
