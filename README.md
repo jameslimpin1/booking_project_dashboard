@@ -27,13 +27,16 @@ Published via GitHub Pages, rebuilt automatically whenever `main` changes:
 - **`dashboard_prototype_page2.html`** — explorer / drill-down. Month ×
   channel × loyalty-tier slicers over the same data, a "what happened"
   impact heatmap (event pattern × month), top complaint/everyday-question
-  cohorts, the price-quintile revenue-risk chart, and a conversation-level
-  drill-down (event journey → full message transcript) for a curated set of
-  216 conversations: every unanswered-opening case, the 50 highest
-  cancellation-risk bookings, and 80 typical conversations for contrast.
-  A summary table above the conversation list shows counts for whatever's
-  currently filtered, sliceable by booking outcome, primary intent, channel,
-  loyalty tier, CSAT, or message count.
+  cohorts, the price-quintile revenue-risk chart, a **Conversation profile**
+  section (6 side-by-side breakdowns — booking outcome, primary intent,
+  channel, loyalty tier, CSAT, message count — over the full ~72K-conversation
+  population for a date range you control with a slider), and a
+  conversation-level drill-down (event journey → full message transcript)
+  for a curated set of 216 conversations: every unanswered-opening case, the
+  50 highest cancellation-risk bookings, and 80 typical conversations for
+  contrast. The profile section intentionally uses the full population, not
+  this curated set, since the curated set is risk-weighted and would
+  misrepresent the true mix (e.g. CSAT) if aggregated on its own.
 
 ## Viewing locally
 
