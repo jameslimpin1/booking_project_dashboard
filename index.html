@@ -208,7 +208,7 @@
               <rect class="mi-soft" x="43" y="28" width="8" height="14" rx="1"/>
             </svg>
             <div class="method-text">
-              <strong style="color:var(--text-primary);">How we sliced the data</strong>
+              <strong style="color:var(--text-primary);">How data was sliced</strong>
               <ul>
                 <li>Grouped bookings by month, channel, loyalty tier, price, topic, journey stage</li>
                 <li>For each group, calculated its own cancellation rate and set it next to every other group's rate, not just the overall average</li>
@@ -226,7 +226,7 @@
               <line class="mi-line" x1="8" y1="16" x2="8" y2="20" stroke-width="1.2"/>
             </svg>
             <div class="method-text">
-              <strong style="color:var(--text-primary);">How we built the journey-stage groups</strong>
+              <strong style="color:var(--text-primary);">How journey-stage groups were built</strong>
               <ul>
                 <li>One label per conversation — no double-counting</li>
                 <li>Unhappy from message 1 → <strong>Opening</strong></li>
@@ -251,7 +251,7 @@
               <rect class="mi-fill" x="20" y="28" width="20" height="12" rx="2"/>
             </svg>
             <div class="method-text">
-              <strong style="color:var(--text-primary);">How we built conversation events</strong>
+              <strong style="color:var(--text-primary);">How conversation events were built</strong>
               <ul>
                 <li>Tagged each message: sender, sentiment, escalation, slow reply (15+ min)</li>
                 <li>Chained tags into a per-conversation sequence</li>
@@ -266,7 +266,7 @@
               <text x="26" y="26" text-anchor="middle" font-size="9" class="mi-fill" style="font-family:inherit;">15%</text>
             </svg>
             <div class="method-text">
-              <strong style="color:var(--text-primary);">How we came up with the baseline</strong>
+              <strong style="color:var(--text-primary);">How baseline was made</strong>
               <ul>
                 <li>14.8% = cancelled bookings ÷ all 58,505 bookings in the trailing 12 months</li>
                 <li>Same population every group is drawn from, so comparisons are apples-to-apples</li>
@@ -283,7 +283,7 @@
               <rect class="mi-soft" x="43" y="32" width="8" height="8" rx="1"/>
             </svg>
             <div class="method-text">
-              <strong style="color:var(--text-primary);">How we find useful signals</strong>
+              <strong style="color:var(--text-primary);">How useful signals were found</strong>
               <ul>
                 <li>Compared each group's cancellation rate to the 14.8% baseline, not to each other</li>
                 <li>Kept only groups clearly above or below baseline — small gaps that could just be noise were set aside</li>
@@ -292,6 +292,9 @@
               </ul>
             </div>
           </div>
+          <p style="margin:14px 0 0; font-size:12px; color:var(--text-muted); font-style:italic;">
+            The data exploration and analysis took a good 2-3 hours.
+          </p>
         </div>
       </details>
     </div>
