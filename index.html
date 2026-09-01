@@ -139,6 +139,21 @@
   }
   details.table-toggle summary::before { content: "▸ "; }
   details.table-toggle[open] summary::before { content: "▾ "; }
+
+  .method-row { display: flex; gap: 16px; align-items: flex-start; margin: 0 0 18px; }
+  .method-row:last-child { margin-bottom: 0; }
+  .method-icon { flex: 0 0 auto; width: 60px; height: 44px; }
+  .method-icon .mi-fill { fill: var(--series-1); }
+  .method-icon .mi-soft { fill: var(--series-1-soft); }
+  .method-icon .mi-stroke { stroke: var(--series-1); }
+  .method-icon .mi-muted { fill: var(--gridline); }
+  .method-icon .mi-muted-stroke { stroke: var(--baseline-axis); }
+  .method-icon .mi-crit { fill: var(--status-critical); }
+  .method-icon .mi-good { fill: var(--status-good); }
+  .method-icon .mi-line { stroke: var(--text-muted); }
+  .method-text { flex: 1 1 auto; min-width: 0; }
+  .method-text ul { margin: 4px 0 0; padding-left: 16px; }
+  .method-text li { margin: 0 0 2px; }
   table.data-table { border-collapse: collapse; margin-top: 12px; width: 100%; font-size: 12px; }
   table.data-table th, table.data-table td {
     text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--gridline);
@@ -181,37 +196,87 @@
       <details class="table-toggle">
         <summary style="font-size:14px;">Methodology — how this analysis was built</summary>
         <div style="margin-top:14px; font-size:13.5px; color:var(--text-secondary); line-height:1.65; max-width:660px;">
-          <p style="margin:0 0 12px;">
-            <strong style="color:var(--text-primary);">How we sliced the data:</strong>
-            we grouped bookings a few different ways — by month, channel, loyalty
-            tier, price, what the guest messaged about, and where in the
-            conversation things went wrong — and compared each group's
-            cancellation rate side by side. That's how we catch a pattern like
-            "unanswered messages cancel more" instead of it getting averaged
-            away in one overall number.
-          </p>
-          <p style="margin:0 0 12px;">
-            <strong style="color:var(--text-primary);">How we built the journey-stage groups
-            (Opening, Early-mid, Late-mid, Closing):</strong>
-            each conversation gets exactly one label, based on where negativity
-            actually shows up. If the guest's very first message already sounds
-            unhappy, that's <strong>Opening</strong>. If the mood stays fine for
-            a while but clearly sours by the end, that's <strong>Late-mid</strong>.
-            If nothing negative ever comes up, it defaults to
-            <strong>Closing</strong>. Everything else falls into
-            <strong>Early-mid</strong>. One label per conversation, so no booking
-            gets counted in more than one stage.
-          </p>
-          <p style="margin:0;">
-            <strong style="color:var(--text-primary);">How we find useful signals:</strong>
-            for every group above, we compare its cancellation rate to the
-            overall average (14.8%) — a group only counts as a real finding if
-            it's clearly higher or lower than that average, not just random
-            noise. Most groups (topic, price) turn out flat, which is itself a
-            useful answer: it tells us where NOT to focus. We also check which
-            group loses us the most revenue, separately from which group
-            cancels most often, since those two aren't always the same group.
-          </p>
+          <div class="method-row">
+            <svg class="method-icon" viewBox="0 0 60 44" aria-hidden="true">
+              <rect class="mi-fill" x="12" y="2" width="36" height="8" rx="1.5"/>
+              <line class="mi-line" x1="30" y1="11" x2="30" y2="17" stroke-width="1.3"/>
+              <polygon class="mi-muted" points="27,16 33,16 30,20"/>
+              <rect class="mi-soft" x="4" y="30" width="8" height="12" rx="1"/>
+              <rect class="mi-soft" x="17" y="24" width="8" height="18" rx="1"/>
+              <rect class="mi-crit" x="30" y="16" width="8" height="26" rx="1"/>
+              <rect class="mi-soft" x="43" y="28" width="8" height="14" rx="1"/>
+            </svg>
+            <div class="method-text">
+              <strong style="color:var(--text-primary);">How we sliced the data</strong>
+              <ul>
+                <li>Grouped bookings by month, channel, loyalty tier, price, topic, journey stage</li>
+                <li>Compared cancellation rate group vs. group</li>
+                <li>Catches patterns a single overall number would hide</li>
+              </ul>
+            </div>
+          </div>
+          <div class="method-row">
+            <svg class="method-icon" viewBox="0 0 60 44" aria-hidden="true">
+              <rect class="mi-soft" x="2" y="20" width="12" height="10" rx="2"/>
+              <rect class="mi-soft" x="16" y="20" width="12" height="10" rx="2" opacity="0.55"/>
+              <rect class="mi-soft" x="30" y="20" width="12" height="10" rx="2" opacity="0.55"/>
+              <rect class="mi-good" x="44" y="20" width="12" height="10" rx="2"/>
+              <circle class="mi-crit" cx="8" cy="13" r="3"/>
+              <line class="mi-line" x1="8" y1="16" x2="8" y2="20" stroke-width="1.2"/>
+            </svg>
+            <div class="method-text">
+              <strong style="color:var(--text-primary);">How we built the journey-stage groups</strong>
+              <ul>
+                <li>One label per conversation — no double-counting</li>
+                <li>Unhappy from message 1 → <strong>Opening</strong></li>
+                <li>Sours late → <strong>Late-mid</strong></li>
+                <li>Never turns negative → <strong>Closing</strong></li>
+                <li>Everything else → <strong>Early-mid</strong></li>
+              </ul>
+            </div>
+          </div>
+          <div class="method-row">
+            <svg class="method-icon" viewBox="0 0 60 44" aria-hidden="true">
+              <line class="mi-line" x1="6" y1="8" x2="30" y2="26" stroke-width="1"/>
+              <line class="mi-line" x1="18" y1="8" x2="30" y2="26" stroke-width="1"/>
+              <line class="mi-line" x1="30" y1="8" x2="30" y2="26" stroke-width="1"/>
+              <line class="mi-line" x1="42" y1="8" x2="30" y2="26" stroke-width="1"/>
+              <line class="mi-line" x1="54" y1="8" x2="30" y2="26" stroke-width="1"/>
+              <circle class="mi-fill" cx="6" cy="8" r="3"/>
+              <circle class="mi-soft" cx="18" cy="8" r="3"/>
+              <circle class="mi-crit" cx="30" cy="8" r="3"/>
+              <circle class="mi-soft" cx="42" cy="8" r="3"/>
+              <circle class="mi-fill" cx="54" cy="8" r="3"/>
+              <rect class="mi-fill" x="20" y="28" width="20" height="12" rx="2"/>
+            </svg>
+            <div class="method-text">
+              <strong style="color:var(--text-primary);">How we built conversation events</strong>
+              <ul>
+                <li>Tagged each message: sender, sentiment, escalation, slow reply (15+ min)</li>
+                <li>Chained tags into a per-conversation sequence</li>
+                <li>Collapsed to one dominant event per conversation, by priority</li>
+                <li>Powers "Which part of the journey do we usually lose?" on the explorer page</li>
+              </ul>
+            </div>
+          </div>
+          <div class="method-row">
+            <svg class="method-icon" viewBox="0 0 60 44" aria-hidden="true">
+              <line class="mi-line" x1="2" y1="26" x2="58" y2="26" stroke-width="1" stroke-dasharray="2,2"/>
+              <rect class="mi-soft" x="4" y="30" width="8" height="10" rx="1"/>
+              <rect class="mi-soft" x="17" y="22" width="8" height="18" rx="1"/>
+              <rect class="mi-good" x="30" y="8" width="8" height="32" rx="1"/>
+              <rect class="mi-soft" x="43" y="32" width="8" height="8" rx="1"/>
+            </svg>
+            <div class="method-text">
+              <strong style="color:var(--text-primary);">How we find useful signals</strong>
+              <ul>
+                <li>Compared each group's rate to the 14.8% baseline</li>
+                <li>Kept only groups clearly above or below baseline</li>
+                <li>Flat groups (topic, price) are still useful — they show where NOT to focus</li>
+                <li>Checked revenue lost separately from cancellation rate</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </details>
     </div>
