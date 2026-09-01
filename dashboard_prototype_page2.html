@@ -1155,14 +1155,29 @@
     opt.value = o; opt.textContent = o[0].toUpperCase() + o.slice(1);
     ddOutcomeSel.appendChild(opt);
   });
-  ddOutcomeSel.addEventListener('change', function () { ddOutcomeFilter = this.value; renderConvList(); });
 
-  const ddIntents = Array.from(new Set(ddMeta.map(function (m) { return m.primary_intent; }))).sort();
   const ddIntentSel = document.getElementById('dd-f-intent');
-  ddIntents.forEach(function (i) {
-    const opt = document.createElement('option');
-    opt.value = i; opt.textContent = INTENT_LABELS[i] || i;
-    ddIntentSel.appendChild(opt);
+
+  // Primary intent options depend on the selected booking outcome -- an
+  // intent only appears if at least one of the 250 curated conversations
+  // has that outcome AND that intent, so the dropdown never offers a
+  // combination with zero results. Outcome has no upstream filter, so its
+  // own option list is always the full set.
+  function refreshIntentOptions() {
+    const pool = ddOutcomeFilter === 'all' ? ddMeta : ddMeta.filter(function (m) { return m.booking_status === ddOutcomeFilter; });
+    const availableIntents = Array.from(new Set(pool.map(function (m) { return m.primary_intent; }))).sort();
+    if (ddIntentFilter !== 'all' && availableIntents.indexOf(ddIntentFilter) === -1) { ddIntentFilter = 'all'; }
+    ddIntentSel.innerHTML = '<option value="all">All intents</option>' + availableIntents.map(function (i) {
+      return '<option value="' + i + '">' + (INTENT_LABELS[i] || i) + '</option>';
+    }).join('');
+    ddIntentSel.value = ddIntentFilter;
+  }
+  refreshIntentOptions();
+
+  ddOutcomeSel.addEventListener('change', function () {
+    ddOutcomeFilter = this.value;
+    refreshIntentOptions();
+    renderConvList();
   });
   ddIntentSel.addEventListener('change', function () { ddIntentFilter = this.value; renderConvList(); });
 
