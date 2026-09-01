@@ -330,11 +330,13 @@
           <h3>Complaints</h3>
           <div class="barchart" id="complaints-chart"></div>
           <button class="filter-reset" id="complaints-toggle-all" style="margin-top:12px;">Show all complaints</button>
+          <button class="filter-reset" id="complaints-download" style="margin-top:12px; margin-left:10px;">⬇ Download CSV</button>
         </div>
         <div>
           <h3>Everyday questions</h3>
           <div class="barchart" id="questions-chart"></div>
           <button class="filter-reset" id="questions-toggle-all" style="margin-top:12px;">Show all everyday questions</button>
+          <button class="filter-reset" id="questions-download" style="margin-top:12px; margin-left:10px;">⬇ Download CSV</button>
         </div>
       </div>
     </div>
@@ -359,6 +361,7 @@
         </div>
       </div>
       <div id="cohort-table-view"></div>
+      <button class="filter-reset" id="cohort-download" style="margin-top:10px; border:1px solid var(--border); border-radius:6px; padding:6px 12px;">⬇ Download this table as CSV</button>
     </div>
 
     <div class="card">
@@ -390,6 +393,7 @@
         <colgroup><col class="col-name"><col class="col-bar"><col class="col-num"><col class="col-num"><col class="col-num"></colgroup>
         <tbody></tbody>
       </table>
+      <button class="filter-reset" id="stage-download" style="margin-top:10px; border:1px solid var(--border); border-radius:6px; padding:6px 12px;">⬇ Download this table as CSV</button>
       <p class="desc" style="margin-top:22px; margin-bottom:10px;">
         Dollar value lost to cancellation, by month and by what happened in the
         conversation — darker cells lost more revenue. Click a month header to
@@ -448,6 +452,7 @@
         </div>
       </div>
       <div class="profile-panels" id="profile-panels"></div>
+      <button class="filter-reset" id="profile-download" style="margin-top:14px; border:1px solid var(--border); border-radius:6px; padding:6px 12px;">⬇ Download this table as CSV</button>
     </div>
 
     <div class="card">
@@ -554,6 +559,23 @@
 
   function pct(num, den) { return den > 0 ? (num / den) * 100 : 0; }
 
+  function csvEscape(v) {
+    const s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function downloadCSV(filename, rows) {
+    const csv = rows.map(function (r) { return r.map(csvEscape).join(','); }).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function aggregateIntent(rows) {
     const byIntent = {};
     rows.forEach(function (r) {
@@ -568,6 +590,19 @@
 
   let showAllComplaints = false;
   let showAllQuestions = false;
+  let lastComplaintsShown = [];
+  let lastQuestionsShown = [];
+
+  function intentRowsToCSV(data) {
+    const header = ['Category', 'Bookings', 'Cancelled', 'Cancellation rate %', 'Total price', 'Cancelled price'];
+    const rows = data.map(function (d) {
+      return [
+        INTENT_LABELS[d.intent] || d.intent, d.bookings, d.cancelled,
+        pct(d.cancelled, d.bookings).toFixed(1), d.totalPrice.toFixed(2), d.cancelledPrice.toFixed(2)
+      ];
+    });
+    return [header].concat(rows);
+  }
 
   function renderComplaintsAndQuestions() {
     const filtered = intentRows.filter(function (r) { return matches(r, filters); });
@@ -575,8 +610,10 @@
     const complaintsAll = all.filter(function (d) { return d.cluster === 'complaint'; }).sort(function (a, b) { return b.bookings - a.bookings; });
     const questionsAll = all.filter(function (d) { return d.cluster === 'everyday'; }).sort(function (a, b) { return b.bookings - a.bookings; });
 
-    renderRankedBars('complaints-chart', showAllComplaints ? complaintsAll : complaintsAll.slice(0, 5), 'var(--status-critical)');
-    renderRankedBars('questions-chart', showAllQuestions ? questionsAll : questionsAll.slice(0, 5), 'var(--series-1)');
+    lastComplaintsShown = showAllComplaints ? complaintsAll : complaintsAll.slice(0, 5);
+    lastQuestionsShown = showAllQuestions ? questionsAll : questionsAll.slice(0, 5);
+    renderRankedBars('complaints-chart', lastComplaintsShown, 'var(--status-critical)');
+    renderRankedBars('questions-chart', lastQuestionsShown, 'var(--series-1)');
 
     const complaintsBtn = document.getElementById('complaints-toggle-all');
     complaintsBtn.textContent = showAllComplaints ? 'Show top 5' : 'Show all ' + complaintsAll.length + ' complaints';
@@ -592,6 +629,12 @@
   document.getElementById('questions-toggle-all').addEventListener('click', function () {
     showAllQuestions = !showAllQuestions;
     renderComplaintsAndQuestions();
+  });
+  document.getElementById('complaints-download').addEventListener('click', function () {
+    downloadCSV('complaints.csv', intentRowsToCSV(lastComplaintsShown));
+  });
+  document.getElementById('questions-download').addEventListener('click', function () {
+    downloadCSV('everyday_questions.csv', intentRowsToCSV(lastQuestionsShown));
   });
 
   // --- Cohort card: fully independent date-range slider ---
@@ -672,6 +715,7 @@
   profileToInput.max = String(months.length - 1);
   profileToInput.value = String(months.length - 1);
 
+  let lastProfileRows = [];
   function renderProfilePanels() {
     let fromIdx = parseInt(profileFromInput.value, 10);
     let toIdx = parseInt(profileToInput.value, 10);
@@ -685,6 +729,7 @@
 
     renderProfileHero(fromIdx, toIdx);
 
+    lastProfileRows = [];
     const panelsEl = document.getElementById('profile-panels');
     panelsEl.innerHTML = PROFILE_DIMENSIONS.map(function (dim) {
       const rows = profileByDim[dim.key].filter(function (r) {
@@ -709,10 +754,12 @@
       const rowsHtml = values.map(function (v) {
         const c = counts[v];
         const w = pct(c, maxCount);
+        const share = pct(c, total);
+        lastProfileRows.push([dim.title, dim.labelFn(v), c, share.toFixed(0)]);
         return '<div class="profile-bar-row" style="grid-template-columns:' + labelWidth + 'px 52px 52px;">' +
           '<div class="profile-bar-label">' + dim.labelFn(v) + '</div>' +
           '<div class="profile-bar-track"><div class="profile-bar-fill" style="width:' + w + '%;"></div></div>' +
-          '<div class="profile-bar-value">' + c.toLocaleString() + ' <span style="color:var(--text-muted); font-weight:400;">(' + pct(c, total).toFixed(0) + '%)</span></div>' +
+          '<div class="profile-bar-value">' + c.toLocaleString() + ' <span style="color:var(--text-muted); font-weight:400;">(' + share.toFixed(0) + '%)</span></div>' +
         '</div>';
       }).join('');
 
@@ -721,6 +768,10 @@
   }
   profileFromInput.addEventListener('input', renderProfilePanels);
   profileToInput.addEventListener('input', renderProfilePanels);
+  document.getElementById('profile-download').addEventListener('click', function () {
+    const header = ['Dimension', 'Value', 'Count', 'Share %'];
+    downloadCSV('conversation_profile.csv', [header].concat(lastProfileRows));
+  });
 
   function renderRankedBars(containerId, data, color) {
     const el = document.getElementById(containerId);
@@ -763,8 +814,10 @@
     return matrix;
   }
 
+  let lastCohortRows = [];
   function renderCohortChart(complaints, filteredRows) {
     const el = document.getElementById('cohort-table-view');
+    lastCohortRows = [];
     if (!complaints.length) {
       el.innerHTML = '<div class="empty-note">No complaints in this filter combination.</div>';
       return;
@@ -788,6 +841,10 @@
         const w = pct(cell.cancelledPrice, maxPrice);
         const cr = pct(cell.cancelled, cell.bookings);
         const rateClass = cr > 20 ? 'rate-high' : '';
+        lastCohortRows.push([
+          TIER_LABEL[tt.tier] || tt.tier, INTENT_LABELS[c.intent] || c.intent,
+          cell.cancelledPrice.toFixed(2), cell.bookings, cr.toFixed(1)
+        ]);
         return '<tr>' +
           '<td class="name">' + (INTENT_LABELS[c.intent] || c.intent) + '</td>' +
           '<td><div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + w + '%; background:var(--status-critical);"></div></div></td>' +
@@ -806,11 +863,16 @@
       '</div>';
     }).join('');
   }
+  document.getElementById('cohort-download').addEventListener('click', function () {
+    const header = ['Loyalty tier', 'Complaint', 'Revenue lost', 'Bookings', 'Cancellation rate %'];
+    downloadCSV('cohort_complaints.csv', [header].concat(lastCohortRows));
+  });
 
+  let lastStageRows = [];
   function renderStageChart() {
     const filtered = revRows.filter(journeyMatches);
     const el = document.getElementById('stage-chart').querySelector('tbody');
-    if (!filtered.length) { el.innerHTML = '<tr><td colspan="5" class="name">No data for this filter combination.</td></tr>'; return; }
+    if (!filtered.length) { el.innerHTML = '<tr><td colspan="5" class="name">No data for this filter combination.</td></tr>'; lastStageRows = []; return; }
 
     const stages = ['1_opening', '2_early_mid', '3_late_mid', '4_closing'];
     const byStage = {};
@@ -823,6 +885,12 @@
 
     const ranked = stages.slice().sort(function (a, b) { return byStage[b].cancelledPrice - byStage[a].cancelledPrice; });
     const maxPrice = Math.max.apply(null, ranked.map(function (s) { return byStage[s].cancelledPrice; }).concat([1]));
+
+    lastStageRows = ranked.map(function (s) {
+      const d = byStage[s];
+      const rate = pct(d.cancelled, d.bookings);
+      return [STAGE_LABEL[s], d.cancelledPrice.toFixed(2), d.bookings, rate.toFixed(1)];
+    });
 
     el.innerHTML = ranked.map(function (s) {
       const d = byStage[s];
@@ -838,6 +906,10 @@
       '</tr>';
     }).join('');
   }
+  document.getElementById('stage-download').addEventListener('click', function () {
+    const header = ['Journey stage', 'Revenue lost', 'Bookings', 'Cancellation rate %'];
+    downloadCSV('journey_stage_revenue_lost.csv', [header].concat(lastStageRows));
+  });
 
   function updateFilterSummary() {
     const parts = [];
@@ -942,10 +1014,6 @@
   });
 
   let lastHeatmapData = null;
-  function csvEscape(v) {
-    const s = String(v);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  }
   document.getElementById('impact-download').addEventListener('click', function () {
     if (!lastHeatmapData) return;
     const rows = [['What happened'].concat(months.map(fmtMonth), 'Total')];
@@ -955,16 +1023,7 @@
         lastHeatmapData.catTotal[c].toFixed(2)
       ));
     });
-    const csv = rows.map(function (r) { return r.map(csvEscape).join(','); }).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'revenue_lost_by_month_and_pattern.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadCSV('revenue_lost_by_month_and_pattern.csv', rows);
   });
 
   function renderImpactHeatmap() {
