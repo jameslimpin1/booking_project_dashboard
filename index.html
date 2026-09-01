@@ -179,22 +179,38 @@
     <!-- Methodology briefer -->
     <div class="card">
       <details class="table-toggle">
-        <summary style="font-size:14px;">Methodology — how this analysis was built (30-second read)</summary>
+        <summary style="font-size:14px;">Methodology — how this analysis was built</summary>
         <div style="margin-top:14px; font-size:13.5px; color:var(--text-secondary); line-height:1.65; max-width:660px;">
           <p style="margin:0 0 12px;">
             <strong style="color:var(--text-primary);">How we sliced the data:</strong>
-            every booking and its full guest conversation was tagged along independent
-            cuts — month, channel, loyalty tier, price tier, conversation topic, and stage
-            of the guest journey — so we could compare like against like. Each cancelled
-            booking is counted in exactly one category per cut, so nothing is double-counted.
+            we grouped bookings a few different ways — by month, channel, loyalty
+            tier, price, what the guest messaged about, and where in the
+            conversation things went wrong — and compared each group's
+            cancellation rate side by side. That's how we catch a pattern like
+            "unanswered messages cancel more" instead of it getting averaged
+            away in one overall number.
+          </p>
+          <p style="margin:0 0 12px;">
+            <strong style="color:var(--text-primary);">How we built the journey-stage groups
+            (Opening, Early-mid, Late-mid, Closing):</strong>
+            each conversation gets exactly one label, based on where negativity
+            actually shows up. If the guest's very first message already sounds
+            unhappy, that's <strong>Opening</strong>. If the mood stays fine for
+            a while but clearly sours by the end, that's <strong>Late-mid</strong>.
+            If nothing negative ever comes up, it defaults to
+            <strong>Closing</strong>. Everything else falls into
+            <strong>Early-mid</strong>. One label per conversation, so no booking
+            gets counted in more than one stage.
           </p>
           <p style="margin:0;">
-            <strong style="color:var(--text-primary);">How we found the signal:</strong>
-            we treated the overall cancellation rate (14.8%) as the baseline and checked
-            whether each slice cleared it by a real margin, or was just noise — most cuts
-            (topic, price) don't, which is itself a useful finding. We cross-checked every
-            result against a revenue-concentration view, since the group that cancels most
-            often and the group that costs us the most aren't always the same one.
+            <strong style="color:var(--text-primary);">How we find useful signals:</strong>
+            for every group above, we compare its cancellation rate to the
+            overall average (14.8%) — a group only counts as a real finding if
+            it's clearly higher or lower than that average, not just random
+            noise. Most groups (topic, price) turn out flat, which is itself a
+            useful answer: it tells us where NOT to focus. We also check which
+            group loses us the most revenue, separately from which group
+            cancels most often, since those two aren't always the same group.
           </p>
         </div>
       </details>
